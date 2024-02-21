@@ -8,10 +8,12 @@ import CategoryModel, {
 import SubCategoryModel, {
   subCategoriesSchema,
   SubCategory,
+  SubCatModel,
 } from "./models/subCategories.model";
 import OrgsModel, { Orgs } from "./models/orgs.model";
 import { Kishurit, Categorie, SubCategorie, Business } from "./types";
 import * as db from "./db1";
+import orgsModel from "./models/orgs.model";
 
 declare global {
   interface Array<T> {
@@ -116,65 +118,94 @@ export const writeSubCatToDB = async (
 };
 
 
-// const jsonOfOrgs = (
-//   jsonDB: Kishurit,
-//   catCollection: Category[],
-//   subcatCollection: SubCategory[]
-// ) => {
-//   if (!jsonDB.job) return [];
+const jsonOfOrgs = (
+  jsonDB: Kishurit,
+  catCollection: Category[],
+  subcatCollection: SubCategory[]
+) => {
+  if (!jsonDB.job) return [];
 
-//   return jsonDB.job.flatMap((cat: Categorie, i: number) => {
-//     const catRefId = findIdByName(catCollection, cat.name);
-//     return cat.links.flatMap((subCat: SubCategorie, j: number) => {
-//       const subcatRefId = findIdByName(subcatCollection, subCat.cat);
-//       return subCat.links.flatMap((org: Business, k: number) => {
-//         return {
-//           catRefId: catRefId,
-//           subCatRefId: subcatRefId,
-//           org_name: org.site_name,
-//           desc: `i: ${i} j: ${j} k: ${k}`,
-//           web_link: [org.link, org.link2, org.link3],
-//           facebook_link: [
-//             org.facebook_link1,
-//             org.facebook_link2,
-//             ...org.facebook_link3,
-//           ],
-//           linkedIn_link: [org.linkedIn_link],
-//           instagram_link: [org.instagram_link],
-//           tel: [{ tel: org.tel1 }, { tel: org.tel2 }],
-//           email: [{ email: org.email1 }, { email: org.email2 }],
-//           whatsapp: [{ tel: org.whatsapp }],
-//           location: org.location,
-//           snifim: [],
-//           active: true,
-//         };
-//       });
-//     });
-//   });
-// };
+  return jsonDB.job.flatMap((cat: Categorie, i: number) => {
+    const catRefId = findIdOfCatByName(catCollection, cat.name);
+    return cat.links.flatMap((subCat: SubCategorie, j: number) => {
+      const subcatRefId = findIdOfSubcatByName(subcatCollection, subCat.cat);
+      return subCat.links.flatMap((org: Business, k: number) => {
+        return {
+          catRefId: catRefId,
+          subCatRefId: subcatRefId,
+          org_name: org.site_name,
+          web_link: [org.link, org.link2, org.link3].filter(link => link),
+          facebook_link: [
+            org.facebook_link1,
+            org.facebook_link2,
+            ...org.facebook_link3,
+          ].filter(link => link),
+          linkedIn_link: [org.linkedIn_link].filter(link => link),
+          instagram_link: [org.instagram_link].filter(link => link),
+          tel: [org.tel1, org.tel2].filter(link => link),
+          email: [org.email1, org.email2].filter(link => link),
+          whatsapp: [org.whatsapp].filter(link => link),
+          location: "", //org?.location ? org.location : "",
+          snifim: [],
+          active: true,
+        };
+      });
+    });
+  });
+};
 
-// export const jsonOfOrgsToDb = (
-//   jsonDB: Kishurit,
-//   catCollection: Category[],
-//   subcatCollection: SubCategory[]
-// ) => {
-//   try {
-//     return jsonOfOrgs(jsonDB, catCollection, subcatCollection);
-//   } catch (error) {
-//     console.error(error);
-//     throw error;
-//   }
-// };
+export const jsonOfOrgsToDb = (
+  jsonDB: Kishurit,
+  catCollection: Category[],
+  subcatCollection: SubCategory[]
+) => {
+  try {
+    return jsonOfOrgs(jsonDB, catCollection, subcatCollection);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
-// export const writeOrgsToDB = async (jsonDB: Kishurit) => {
-//   try {
-//     var db1 = db.default(process.env.DB_NAME);
-//     return await CategoriesModel(db1)?.insertMany(jsonOfCat(jsonDB));
-//   } catch (error) {
-//     console.error(error);
-//     throw error;
-//   }
-// };
+export const writeOrgsToDB = async (  jsonDB: Kishurit,
+  catCollection: Category[],
+  subcatCollection: SubCategory[]
+) => {
+  try {
+    // var db1 = db.default(process.env.DB_NAME);
+    return await orgsModel.insertMany(jsonOfOrgs(jsonDB, catCollection, subcatCollection));
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+
+export const writeOrg1 = async (
+  catName: string,
+  subCatName: string,
+  json: Business
+) => {
+
+    const subcatRefId = (await SubCatModel.find ({name: subCatName}));
+    const catRefId = subcatRefId[0].catRefId._id;
+    console.log (catRefId);
+    console.log (subcatRefId[0]);
+    const newCat = new OrgsModel ({
+      catRefId: catRefId,
+      subCatRefId: subcatRefId[0]._id,
+      org_name: json.site_name,
+      web_link: [json?.link, json.link2],
+      facebook_link: [json?.facebook_link1, json.facebook_link2],
+      instagram_link: [json.instagram_link],
+      linkedIn_link: [json.linkedIn_link],
+      tel: [json.tel1, json?.tel2],
+      email: [json.email1, json?.email2],
+      location: "",
+    })
+    return newCat.save();
+};
+
 
 // const jsonOfSubCat = async (
 //   jsonDB: Kishurit,

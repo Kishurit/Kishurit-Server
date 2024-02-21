@@ -15,8 +15,8 @@ export const categoriesSchema: Schema<Category> = new Schema<Category>({
   },
   desc: {
     type: String,
-    required: true,
     unique: true,
+    required: true,
   },
 });
 
@@ -26,14 +26,14 @@ categoriesSchema.plugin(uniqueValidator, {
 
 categoriesSchema.plugin(mongooseAutoPopulate);
 
-export const CategoryModel: Model<Category> = mongoose.model<Category>("categories", categoriesSchema);
+export const CategoryModel: Model<Category> = mongoose.model<Category>("Category", categoriesSchema);
 
-// const CatModelWithConn = (connection: Connection): Model<Category> => {
-//   return connection.model<Category>("categories", categoriesSchema);
+// export const CatModelWithConn = (connection: Connection): Model<Category> => {
+//   return connection.model<Category>("Category", categoriesSchema);
 // };
 
 // export const CategoryModel = (): Model<Category> => {
-//   return db.default(process.env.DB_NAME).model<Category>("categories", categoriesSchema);
+//   return db.default(process.env.DB_NAME).model<Category>("Category", categoriesSchema);
 // };
 
 
