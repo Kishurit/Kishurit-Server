@@ -2,13 +2,17 @@ import mongoose, { Document, Model, Schema, Types } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 
-type tel = { tel: string; owner?: string };
+interface Tel {
+  tel: string;
+  owner?: string;
+}
+
 type Location = "" | "north" | "south" | "center" | "yosh" | "website";
 
-export type Snif = {
+interface Snif {
   name?: String;
-  tel: tel[];
-  whatsapp?: tel[];
+  tel: Tel[];
+  whatsapp?: Tel[];
   email?: string[];
   location: Location;
   city: string;
@@ -25,55 +29,60 @@ export interface Orgs extends Document {
   linkedIn_link?: string[];
   instagram_link?: string[];
   email: string[];
-  tel?: tel[];
-  whatsapp?: tel[];
+  tel: Tel[];
+  whatsapp?: Tel[];
   location: Location;
   address?: String;
   snifim?: Snif[];
   active: Boolean;
 }
 
-const telSchema = new Schema<tel>({
+const telSchema = new mongoose.Schema<Tel>({
   tel: { type: String, required: true },
-  owner: { type: String, required: false },
-})
+  owner: { type: String, required: false }
+}, { _id: false });
+
+const whatsappSchema = new mongoose.Schema<Tel>({
+  tel: { type: String, required: false },
+  owner: { type: String, required: false }
+}, { _id: false });
 
 const snifSchema = new Schema<Snif>({
   name: { type: String },
-  tel: [telSchema],
-  whatsapp: [telSchema],
+  tel: { type: [telSchema], required: true },
+  whatsapp: [whatsappSchema],
   email: [String],
-  location: { type: String, enum: ["", "north", "south", "center", "yosh", "website"], default: "", required: true },
+  location: { type: String, enum: ["", "north", "south", "center", "yosh", "website"], default: "" },
   city: { type: String, required: true },
   address: { type: String, required: true }
-});
+}, { _id: false });
 
 const orgSchema = new Schema<Orgs>({
-  catRefId: { type: Schema.Types.ObjectId, required: true, ref: "Categry" },
-  subCatRefId: { type: Schema.Types.ObjectId, required: true, ref: "SubCategory" },
+  catRefId: { type: Schema.Types.ObjectId, required: true, ref: "Categry", autopopulate: true },
+  subCatRefId: { type: Schema.Types.ObjectId, required: true, ref: "SubCategory", autopopulate: true },
   org_name: { type: String, required: true },
-  desc: { type: String, required: false },
-  web_link: { type: [String], default: [], required: false },
-  facebook_link: { type: [String], default: [], required: false },
-  linkedIn_link: { type: [String], default: [], required: false },
-  instagram_link: { type: [String], default: [], required: false },
-  email: { type: [String], required: false },
-  tel: { type: [telSchema], required: false },
-  whatsapp: { type: [telSchema], required: false },
-  location: { type: String, enum: ["", "north", "south", "center", "yosh", "website"], default: "", required: true },
-  address: { type: String, required: false },
+  desc: { type: String },
+  web_link: { type: [String], default: [] },
+  facebook_link: { type: [String], default: [] },
+  linkedIn_link: { type: [String], default: [] },
+  instagram_link: { type: [String], default: [] },
+  email: { type: [String] },
+  tel: { type: [telSchema], required: true },
+  whatsapp: [whatsappSchema],
+  location: { type: String, enum: ["", "north", "south", "center", "yosh", "website"], default: "" },
+  address: { type: String },
   snifim: [
     {
       type: [snifSchema],
       required: false,
     },
   ],
-  active: { type: Boolean, required: true, default: false },
+  active: { type: Boolean, default: false },
 });
 
 orgSchema.plugin(uniqueValidator, "Error, expected {PATH} to be unique.");
 orgSchema.plugin(mongooseAutoPopulate);
 
-const orgsModel: Model<Orgs> = mongoose.model<Orgs>("Org", orgSchema);
+const OrgsModel: Model<Orgs> = mongoose.model<Orgs>("Org", orgSchema);
 
-export default orgsModel;
+export default OrgsModel;

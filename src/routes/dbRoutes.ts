@@ -23,12 +23,16 @@ import { Orgs } from "../models/orgs.model";
 
 dbRouter.get("/wc1", async function (req: Request, res: Response, next: NextFunction) {
   try {
-    writeCatToDB(jsonDB).then((result1) => {
-      writeSubCatToDB(jsonDB, result1).then((result2) =>
-        res.json([result1, result2, { cat: `cat len ${result1.length}`, subCat: `sub-cat len ${result2.length}` }])
-        // res.json(result1)
-      );
-    });
+    writeCatToDB(jsonDB).then(result1 =>
+      writeSubCatToDB(jsonDB, result1).then(result2 =>
+        writeOrgsToDB(jsonDB, result1, result2).then(result3 =>
+          res.json([result1, result2, result3, {
+            cat: `cat len ${result1.length}`, subCat: `sub-cat len ${result2.length}`, org: `org len: ${result3.length}`
+          }])
+          // res.json(result1)
+        )
+      )
+    )
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
@@ -71,7 +75,7 @@ dbRouter.get('/wc3', async function (req: Request, res: Response, next: NextFunc
       "tel1": "074-769-9100",
       "tel2": "",
       "whatsapp": "",
-      "location": ""
+      "location": "north"
     }
 
     var result = writeOrg1("מקומות עבודה ציבוריים", "אתרי ממשלה", json);
@@ -83,5 +87,22 @@ dbRouter.get('/wc3', async function (req: Request, res: Response, next: NextFunc
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+dbRouter.get('/wc4', function (req: Request, res: Response, next: NextFunction) {
+  CategoryModel.find().maxTimeMS(30000)
+    .then(result1 => {
+      SubCatModel.find().maxTimeMS(30000)
+        .then(result2 =>
+          writeOrgsToDB(jsonDB, result1, result2).then(result3 =>
+            res.json([result3, { cat: `orgs len ${result3.length}` }])
+          )
+        )
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    });
+});
+
 
 export default dbRouter;

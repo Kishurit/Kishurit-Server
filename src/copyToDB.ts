@@ -13,7 +13,6 @@ import SubCategoryModel, {
 import OrgsModel, { Orgs } from "./models/orgs.model";
 import { Kishurit, Categorie, SubCategorie, Business } from "./types";
 import * as db from "./db1";
-import orgsModel from "./models/orgs.model";
 
 declare global {
   interface Array<T> {
@@ -108,7 +107,7 @@ export const writeSubCatToDB = async (
   try {
     //var db1 = db.default(process.env.DB_NAME);
     const subCatObj = jsonOfSubCat(jsonDB, catCollection); // Wait for jsOfSubCat to complete
-    var newSubCat = await SubCategoryModel()?.insertMany(subCatObj);
+    var newSubCat = await SubCatModel?.insertMany(subCatObj);
     console.log("Subcategories inserted successfully.");
     return newSubCat;
   } catch (error) {
@@ -142,11 +141,10 @@ const jsonOfOrgs = (
           ].filter(link => link),
           linkedIn_link: [org.linkedIn_link].filter(link => link),
           instagram_link: [org.instagram_link].filter(link => link),
-          tel: [org.tel1, org.tel2].filter(link => link),
+          tel: [{ tel: org.tel1 }, { tel: org.tel2 }].filter(link => link.tel),
           email: [org.email1, org.email2].filter(link => link),
-          whatsapp: [org.whatsapp].filter(link => link),
-          location: "", //org?.location ? org.location : "",
-          snifim: [],
+          whatsapp: [{ tel: org.whatsapp }].filter(link => link.tel),
+          location: org?.location ? org.location : "",
           active: true,
         };
       });
@@ -167,13 +165,19 @@ export const jsonOfOrgsToDb = (
   }
 };
 
-export const writeOrgsToDB = async (  jsonDB: Kishurit,
+export const writeOrgsToDB = async (jsonDB: Kishurit,
   catCollection: Category[],
   subcatCollection: SubCategory[]
 ) => {
   try {
     // var db1 = db.default(process.env.DB_NAME);
-    return await orgsModel.insertMany(jsonOfOrgs(jsonDB, catCollection, subcatCollection));
+    const orgsObj = jsonOfOrgs(jsonDB, catCollection, subcatCollection);
+    var newOrg = await OrgsModel?.insertMany(orgsObj);
+    console.log("Orgs inserted successfully.");
+    return newOrg;
+
+
+    // return await OrgsModel.insertMany(jsonOfOrgs(jsonDB, catCollection, subcatCollection));
   } catch (error) {
     console.error(error);
     throw error;
@@ -187,23 +191,23 @@ export const writeOrg1 = async (
   json: Business
 ) => {
 
-    const subcatRefId = (await SubCatModel.find ({name: subCatName}));
-    const catRefId = subcatRefId[0].catRefId._id;
-    console.log (catRefId);
-    console.log (subcatRefId[0]);
-    const newCat = new OrgsModel ({
-      catRefId: catRefId,
-      subCatRefId: subcatRefId[0]._id,
-      org_name: json.site_name,
-      web_link: [json?.link, json.link2],
-      facebook_link: [json?.facebook_link1, json.facebook_link2],
-      instagram_link: [json.instagram_link],
-      linkedIn_link: [json.linkedIn_link],
-      tel: [json.tel1, json?.tel2],
-      email: [json.email1, json?.email2],
-      location: "",
-    })
-    return newCat.save();
+  const subcatRefId = (await SubCatModel.find({ name: subCatName }));
+  const catRefId = subcatRefId[0].catRefId._id;
+  console.log(catRefId);
+  console.log(subcatRefId[0]);
+  const newCat = new OrgsModel({
+    catRefId: catRefId,
+    subCatRefId: subcatRefId[0]._id,
+    org_name: json.site_name,
+    web_link: [json?.link, json.link2],
+    facebook_link: [json?.facebook_link1, json.facebook_link2],
+    instagram_link: [json.instagram_link],
+    linkedIn_link: [json.linkedIn_link],
+    tel: [json.tel1, json?.tel2],
+    email: [json.email1, json?.email2],
+    location: "",
+  })
+  return newCat.save();
 };
 
 

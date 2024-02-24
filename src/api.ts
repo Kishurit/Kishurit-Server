@@ -63,7 +63,7 @@ export const getCnt: (dbName: string) => Promise<CountObject> = async (
 
 const myJsonData = (): Kishurit => {
   try {
-    const rawdata: Buffer = fs.readFileSync("./src/dbShort.json");
+    const rawdata: Buffer = fs.readFileSync("./src/db.json");
     const myData: Kishurit = JSON.parse(rawdata.toString());
     fs.closeSync;
     console.log("JSON data has been successfully parsed.");

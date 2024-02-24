@@ -5,7 +5,7 @@ import { Category, categoriesSchema } from "./categories.model";
 import * as db from "../db1";
 
 export interface SubCategory extends Category {
-  catRefId: Types.ObjectId;
+  catRefId: Types.ObjectId | Category;
 }
 
 export const subCategoriesSchema: Schema<SubCategory> = new Schema<SubCategory>({
